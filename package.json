@@ -32,6 +32,8 @@
     "gulp-uglify": "^3.0.2"
   },
   "dependencies": {
+    "@b2storefront/b2storefront-telemetry": "^0.1.22",
+    "dotenv": "^16.0.1",
     "sass": "^1.54.3"
   }
 }

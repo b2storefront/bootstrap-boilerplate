@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const gulp = require('gulp');
 const gulpIf = require('gulp-if');
 const browserSync = require('browser-sync').create();
@@ -12,6 +14,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const htmlPartial = require('gulp-html-partial');
 const clean = require('gulp-clean');
 const isProd = process.env.NODE_ENV === 'prod';
+const { trackUsage, trackBuildStarted, trackBuildFinished } = require('@b2storefront/b2storefront-telemetry')
 
 const htmlFile = [
     'src/*.html'
@@ -55,11 +58,13 @@ function img() {
         .pipe(gulp.dest('docs/img/'));
 }
 
-function serve() {
+async function serve() {
     browserSync.init({
         open: true,
         server: './docs'
     });
+
+    await buildFinished()
 }
 
 function browserSyncReload(done) {
@@ -68,11 +73,13 @@ function browserSyncReload(done) {
 }
 
 
-function watchFiles() {
+async function watchFiles() {
     gulp.watch('src/**/*.html', gulp.series(html, browserSyncReload));
     gulp.watch('src/**/*.scss', gulp.series(css, browserSyncReload));
     gulp.watch('src/**/*.js', gulp.series(js, browserSyncReload));
     gulp.watch('src/img/**/*.*', gulp.series(img));
+
+    await trackUsage()
 
     return;
 }
@@ -82,9 +89,23 @@ function del() {
         .pipe(clean());
 }
 
+let hrstart = null
+
+async function buildStarted() {
+  hrstart = process.hrtime()
+
+  await trackBuildStarted()
+}
+
+async function buildFinished() {
+  let hrend = process.hrtime(hrstart)
+
+  await trackBuildFinished(hrend[0])
+}
+
 exports.css = css;
 exports.html = html;
 exports.js = js;
 exports.del = del;
-exports.serve = gulp.parallel(html, css, js, img, watchFiles, serve);
+exports.serve = gulp.parallel(buildStarted, html, css, js, img, watchFiles, serve);
 exports.default = gulp.series(del, html, css, js, img);
