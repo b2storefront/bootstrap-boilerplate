@@ -67,19 +67,18 @@ async function serve() {
     await buildFinished()
 }
 
-function browserSyncReload(done) {
-    browserSync.reload();
-    done();
+async function browserSyncReload(done) {
+    browserSync.reload()
+    await trackUsage()
+    done()
 }
 
 
-async function watchFiles() {
+function watchFiles() {
     gulp.watch('src/**/*.html', gulp.series(html, browserSyncReload));
     gulp.watch('src/**/*.scss', gulp.series(css, browserSyncReload));
     gulp.watch('src/**/*.js', gulp.series(js, browserSyncReload));
     gulp.watch('src/img/**/*.*', gulp.series(img));
-
-    await trackUsage()
 
     return;
 }
